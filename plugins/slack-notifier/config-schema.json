@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bzimbelman/subscription-service-plugins-community/plugins/slack-notifier/config-schema.json",
+  "title": "slack-notifier configuration",
+  "description": "Configuration keys for the slack-notifier community plugin (OpenProject #468).",
+  "type": "object",
+  "properties": {
+    "plugins": {
+      "type": "object",
+      "properties": {
+        "slack-notifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Master toggle. When false, no scheduling is registered and no HTTP calls are made."
+            },
+            "webhook-url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Slack incoming-webhook URL. Required. Resolve from an env var (e.g. ${SLACK_WEBHOOK_URL}); never commit the literal."
+            },
+            "channel": {
+              "type": "string",
+              "description": "Optional channel override (e.g. \"#integrations\"). Most incoming-webhooks ignore this and post to the channel the webhook was created for."
+            },
+            "admin-base-url": {
+              "type": "string",
+              "format": "uri",
+              "default": "http://localhost:8080",
+              "description": "Base URL of the engine's admin API (where /admin/observe/dlq lives)."
+            },
+            "admin-bearer-token": {
+              "type": "string",
+              "description": "Optional bearer token for the admin API. Resolve from an env var."
+            },
+            "max-retries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 3,
+              "description": "Number of additional attempts after an initial Slack POST failure (5xx)."
+            },
+            "rules": {
+              "type": "array",
+              "description": "Alerting rules. The DLQ poller evaluates dlq-threshold rules; error-rate is reserved for a future iteration.",
+              "items": {
+                "type": "object",
+                "required": ["name", "type"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Stable identifier used in cooldown bookkeeping and Slack message footers."
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["dlq-threshold", "error-rate"]
+                  },
+                  "threshold": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "For dlq-threshold: fire when DLQ size > this value."
+                  },
+                  "threshold-percent": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "For error-rate: fire when the failure percentage exceeds this value."
+                  },
+                  "window-minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "For error-rate: rolling-window length."
+                  },
+                  "cooldown-seconds": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 600,
+                    "description": "After firing, suppress further alerts from this rule for this many seconds."
+                  }
+                }
+              }
+            }
+          },
+          "required": ["webhook-url"]
+        }
+      }
+    }
+  }
+}

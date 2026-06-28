@@ -1,0 +1,28 @@
+# Default configuration for the slack-notifier community plugin.
+#
+# Operators import this file into their own Spring Boot application
+# config (e.g. via `spring.config.import`) to pick up sensible defaults
+# without having to copy keys by hand.
+#
+# Values use <placeholder> form for any secrets — never commit real
+# webhook URLs, bearer tokens, or channel names.
+
+plugins:
+  slack-notifier:
+    enabled: true
+    # REQUIRED: pull the webhook URL from an environment variable.
+    # Never commit the literal URL.
+    webhook-url: "${SLACK_WEBHOOK_URL:<placeholder>}"
+    channel: "#integrations"
+    admin-base-url: "http://localhost:8080"
+    max-retries: 3
+    rules:
+      - name: dlq-size
+        type: dlq-threshold
+        threshold: 10
+        cooldown-seconds: 600
+      - name: error-rate
+        type: error-rate
+        window-minutes: 5
+        threshold-percent: 5
+        cooldown-seconds: 600

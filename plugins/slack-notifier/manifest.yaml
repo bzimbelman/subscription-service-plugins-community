@@ -1,0 +1,29 @@
+# Plugin manifest — slack-notifier (OpenProject ticket #468).
+#
+# Watches the subscription-service DLQ and posts alerts to a Slack
+# channel via incoming webhook when configured thresholds are crossed.
+#
+# Architecture: decoupled poller. The plugin polls the engine's public
+# `/admin/observe/dlq` admin endpoint on a schedule and emits Slack
+# alerts when the DLQ size crosses a threshold (or, optionally, when
+# the error rate over a sliding window exceeds a percent). It does NOT
+# couple to engine internals.
+
+profile:
+  id: slack-notifier
+  version: "0.1.0"
+  schemaVersion: 1
+  supplier: community
+  description: "Forward DLQ-size and error-rate events to Slack via incoming webhook"
+  implements:
+    - MessageSink
+
+  contract:
+    spiArtifact: com.bzonfhir.subscriptionservice:plugins-spi
+    spiVersion: "0.1.0-SNAPSHOT"
+
+  jvm:
+    minVersion: "17"
+
+  config:
+    schema: config-schema.json
