@@ -1,0 +1,11 @@
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+*.tgz
+.cds/
+.gradle/
+build/
+out/
+*.iml
+.kotlin/

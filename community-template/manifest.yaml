@@ -1,0 +1,41 @@
+# Community plugin template — copy this directory to plugins/<your-plugin-id>/,
+# rename, fill in.
+#
+# This file intentionally contains placeholders. Replace every <placeholder>
+# before opening a PR. See ../docs/authoring-guide.md for the walkthrough.
+
+plugin:
+  # Lower-case-kebab identifier, unique across this catalog.
+  # Examples: slack-notifier, s3-archive, syslog-forwarder.
+  id: <placeholder-plugin-id>
+
+  # SemVer for this plugin bundle. Independent from the engine version.
+  version: "<placeholder-version>"
+
+  # Manifest-schema version. Currently always 1.
+  schemaVersion: 1
+
+  # Supplier of this plugin. Community plugins in this repo always use 'community'.
+  # Vendor-certified plugins (separate commercial repo) use 'natera' or similar.
+  supplier: community
+
+  # The plugins-spi contract this plugin compiled against. The engine validates
+  # at load time that this SPI version is compatible with the engine's loaded SPI.
+  contract:
+    spiArtifact: com.bzonfhir.subscriptionservice:plugins-spi
+    spiVersion: "<placeholder-spi-version>"
+
+  # The SPI interfaces this plugin implements. One entry only in most cases;
+  # multi-SPI plugins are discouraged (split them into separate plugins instead).
+  implements:
+    - <placeholder.fully.qualified.SpiInterface>
+
+  # JVM requirements. Engine runs JDK 17; plugins must not require newer.
+  jvm:
+    minVersion: "17"
+
+  # Configuration accepted by this plugin. The schema file lives alongside the
+  # manifest; it's a JSON Schema fragment describing the keys this plugin reads
+  # out of the engine's configuration store.
+  config:
+    schema: config-schema.json
