@@ -1,0 +1,38 @@
+name: release
+on:
+  push:
+    tags:
+      - '*-v*'
+
+jobs:
+  bundle-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse plugin id + version from tag
+        id: parse
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          PLUGIN_ID="${TAG%-v*}"
+          VERSION="${TAG#*-v}"
+          echo "plugin_id=$PLUGIN_ID" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - name: Verify the plugin directory exists
+        run: |
+          if [ ! -d "plugins/${{ steps.parse.outputs.plugin_id }}" ]; then
+            echo "Plugin directory 'plugins/${{ steps.parse.outputs.plugin_id }}' does not exist."
+            exit 1
+          fi
+      - name: Bundle
+        run: |
+          tar czf "${{ steps.parse.outputs.tag }}.tgz" \
+            "plugins/${{ steps.parse.outputs.plugin_id }}/"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "${{ steps.parse.outputs.tag }}.tgz"
+          generate_release_notes: true
+      # TODO future: sign tarball with cosign before attaching the release asset.

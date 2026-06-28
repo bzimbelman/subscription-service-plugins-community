@@ -1,0 +1,50 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  discover-plugins:
+    runs-on: ubuntu-latest
+    outputs:
+      plugins: ${{ steps.list.outputs.plugins }}
+      count: ${{ steps.list.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        name: Discover plugin modules
+        run: |
+          # Find every plugins/<id>/build.gradle.kts and emit a JSON array of <id>s.
+          # If no plugins exist yet (scaffold state), emit an empty matrix so the
+          # downstream job is skipped cleanly via `if: needs.discover-plugins.outputs.count != '0'`.
+          mapfile -t IDS < <(find plugins -mindepth 2 -maxdepth 2 -name build.gradle.kts -printf '%h\n' 2>/dev/null | xargs -r -n1 basename | sort -u)
+          if [ "${#IDS[@]}" -eq 0 ]; then
+            echo "plugins=[]" >> "$GITHUB_OUTPUT"
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            JSON=$(printf '%s\n' "${IDS[@]}" | jq -R . | jq -s -c .)
+            echo "plugins=$JSON" >> "$GITHUB_OUTPUT"
+            echo "count=${#IDS[@]}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-plugin:
+    needs: discover-plugins
+    if: needs.discover-plugins.outputs.count != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJSON(needs.discover-plugins.outputs.plugins) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build ${{ matrix.plugin }}
+        working-directory: plugins/${{ matrix.plugin }}
+        run: ./gradlew :build --no-daemon --stacktrace
